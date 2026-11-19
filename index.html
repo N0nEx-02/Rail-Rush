@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RailRush — Train Track Puzzle</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body data-theme="neon">
+
+  <div class="top-actions" inert>
+    <label class="theme-picker" for="themeSelect">
+      <span>Theme</span>
+      <select id="themeSelect">
+        <option value="default">Default</option>
+        <option value="night">Night</option>
+      <option value="neon" selected>Neon</option>
+      </select>
+    </label>
+    <a class="coffee-button" href="https://vmt.tail7e5fd1.ts.net/fr.png" target="_blank" rel="noopener noreferrer">☕ Buy me a coffee</a>
+  </div>
+
+  <div class="header" inert>
+    <h1>🚂 RAILRUSH</h1>
+    <p>Rotate the tracks to guide the train to the goal!</p>
+    <p class="leader-summary" id="leaderSummary" aria-live="polite">🏆 Top 1: No runs recorded yet</p>
+    <p class="practice-indicator" id="practiceIndicator" hidden>Play Mode · Scores are not saved</p>
+  </div>
+
+  <div class="hud" inert>
+    <div class="stat">
+      <span class="stat-label">Level</span>
+      <span class="stat-value" id="levelDisplay">1</span>
+    </div>
+    <div class="stat">
+      <span class="stat-label">Time</span>
+      <span class="stat-value" id="timeDisplay">00:00.0</span>
+    </div>
+    <div class="stat">
+      <span class="stat-label">Attempts</span>
+      <span class="stat-value" id="livesDisplay">3 / 3</span>
+    </div>
+    <div class="stat">
+      <span class="stat-label">Rotations</span>
+      <span class="stat-value" id="rotationDisplay">0</span>
+    </div>
+    <div class="stat">
+      <span class="stat-label">Status</span>
+      <span class="stat-value" id="statusDisplay" style="color: #fbbf24;">Boarding...</span>
+    </div>
+  </div>
+
+  <div class="controls" inert>
+    <button id="leaderboardBtn" type="button">🏆 Leaderboard</button>
+    <button id="fastForwardBtn">⏩ Fast Forward (Hold)</button>
+    <button id="newGameBtn" type="button">🔄 New Game</button>
+    <button id="soundBtn" type="button" aria-pressed="true">🔊 Sound On</button>
+    <label class="volume-control" for="musicVolume">
+      Music
+      <input id="musicVolume" type="range" min="0" max="100" step="1" value="50" aria-label="Background music volume">
+    </label>
+  </div>
+
+  <audio id="backgroundMusic" src="https://vmt.tail7e5fd1.ts.net/fidget-rush/music/BackgroundMusic.mp3" loop preload="auto"></audio>
+
+  <div class="canvas-wrapper" inert>
+    <canvas id="gameCanvas" width="560" height="560"></canvas>
+    <div class="overlay" id="overlay">
+      <h2 id="overlayTitle">Level Complete!</h2>
+      <p id="overlayDesc">The train arrived safely at the destination.</p>
+      <button class="primary" id="overlayBtn">Next Level</button>
+    </div>
+  </div>
+
+  <div class="leaderboard-modal" id="leaderboardModal" aria-hidden="true" inert>
+    <section class="leaderboard-card" role="dialog" aria-modal="true" aria-labelledby="leaderboardTitle">
+      <div class="leaderboard-heading">
+        <h2 id="leaderboardTitle">Leaderboard</h2>
+        <button id="closeLeaderboardBtn" type="button" aria-label="Close leaderboard">✕</button>
+      </div>
+      <p class="leaderboard-explainer">Ranks by highest level reached, then fastest time, then fewest rotations.</p>
+      <p class="leaderboard-message" id="leaderboardMessage" role="status" hidden></p>
+      <ol class="leaderboard-list" id="leaderboardList"></ol>
+      <p class="leaderboard-empty" id="leaderboardEmpty">No runs recorded yet. Finish a run to get on the board.</p>
+    </section>
+  </div>
+
+  <div class="game-start-screen" id="gameStartScreen" aria-hidden="false">
+    <section class="leaderboard-card start-card" role="dialog" aria-modal="true" aria-labelledby="startTitle">
+      <h2 id="startTitle">Welcome to RailRush</h2>
+      <p>Enter your name and start a ranked game, or choose Play for an unranked run.</p>
+      <div class="start-options">
+        <label class="theme-picker" for="startThemeSelect">
+          <span>Theme</span>
+          <select id="startThemeSelect">
+            <option value="default">Default</option>
+            <option value="night">Night</option>
+            <option value="neon" selected>Neon</option>
+          </select>
+        </label>
+        <button id="startLeaderboardBtn" type="button">🏆 Leaderboard</button>
+      </div>
+      <form class="start-form" id="startForm">
+        <label for="playerNameInput">
+          Player name (max 8 characters)
+          <input class="player-name-input" id="playerNameInput" name="playerName" type="text" maxlength="8" autocomplete="nickname" placeholder="Enter your name">
+        </label>
+        <p class="start-error" id="startError" role="alert" hidden></p>
+        <button class="primary" id="startGameBtn" type="submit">Start Game</button>
+        <button id="practiceBtn" type="button">Play</button>
+      </form>
+    </section>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>

@@ -1,0 +1,8 @@
+{
+  "appId": "com.railrush.game",
+  "appName": "RailRush",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  }
+}

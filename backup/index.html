@@ -1,0 +1,699 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#e9efe6">
+  <title>Switchyard Sprint — Train Track Puzzle</title>
+  <style>
+    :root {
+      --ink: #20332f;
+      --muted: #71817a;
+      --paper: #f7f8f2;
+      --green: #2f8066;
+      --green-dark: #1d5e4d;
+      --gold: #f2bd61;
+      --red: #d26956;
+      --line: #dce5dc;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background: #e9efe6;
+    }
+    * { box-sizing: border-box; }
+    body {
+      min-height: 100vh;
+      margin: 0;
+      background:
+        radial-gradient(ellipse at 10% 12%, rgba(255,255,255,.82), transparent 34rem),
+        linear-gradient(140deg, #eef2e8 0%, #e4ede4 56%, #e8eee6 100%);
+    }
+
+    button { font: inherit; }
+    .page { width: min(1120px, calc(100% - 36px)); margin: 0 auto; padding: 22px 0 34px; }
+    .topbar { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+    .brand { display: flex; align-items: center; gap: 10px; font-size: .79rem; font-weight: 850; letter-spacing: .14em; }
+    .brand-icon {
+      display: grid;
+      width: 38px;
+      height: 38px;
+      place-items: center;
+      border-radius: 12px;
+      background: var(--green-dark);
+      color: white;
+      font-size: 1.15rem;
+      box-shadow: 0 5px 12px rgba(29,94,77,.18);
+    }
+    .top-note { color: var(--muted); font-size: .8rem; }
+    .hero { padding: 34px 0 27px; text-align: center; }
+    .eyebrow { margin: 0 0 9px; color: var(--green); font-size: .73rem; font-weight: 850; letter-spacing: .18em; text-transform: uppercase; }
+    h1 { margin: 0; font-size: clamp(2.15rem, 5vw, 3.7rem); line-height: 1.03; letter-spacing: -.06em; }
+    .hero-copy { max-width: 570px; margin: 13px auto 0; color: var(--muted); font-size: .96rem; line-height: 1.6; }
+
+    .game-layout { display: grid; grid-template-columns: 280px minmax(0, 1fr); align-items: start; gap: 22px; }
+    .panel, .board-card {
+      border: 1px solid rgba(204, 218, 207, .9);
+      border-radius: 20px;
+      background: rgba(250, 251, 246, .88);
+      box-shadow: 0 18px 48px rgba(37, 69, 54, .09);
+    }
+    .panel { padding: 20px; }
+    .level-line { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+    .level-label { color: var(--muted); font-size: .72rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+    .level-number { display: inline-flex; min-width: 34px; min-height: 30px; align-items: center; justify-content: center; border-radius: 10px; background: #e5f1e7; color: var(--green-dark); font-weight: 850; }
+    .timer-box { margin-top: 21px; padding: 14px; border-radius: 14px; background: #f0f3eb; }
+    .timer-head { display: flex; align-items: center; justify-content: space-between; }
+    .timer-title { color: var(--muted); font-size: .74rem; font-weight: 750; letter-spacing: .08em; text-transform: uppercase; }
+    .timer-value { font-variant-numeric: tabular-nums; font-size: 1.45rem; font-weight: 850; }
+    .timer-value.urgent { color: var(--red); }
+    .timer-track { height: 7px; overflow: hidden; margin-top: 10px; border-radius: 99px; background: #dfe6dc; }
+    .timer-fill { width: 100%; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #56a87f, #f0bd5d); transition: width .15s linear; }
+    .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+    .stat { padding: 12px 13px; border: 1px solid var(--line); border-radius: 13px; background: #fffefa; }
+    .stat-value { display: block; font-size: 1.1rem; font-weight: 850; }
+    .stat-label { display: block; margin-top: 3px; color: var(--muted); font-size: .68rem; font-weight: 750; letter-spacing: .09em; text-transform: uppercase; }
+    .status-card { display: flex; gap: 11px; min-height: 76px; align-items: flex-start; margin-top: 16px; padding: 13px; border-radius: 13px; background: #eaf3ec; }
+    .status-dot { flex: 0 0 9px; width: 9px; height: 9px; margin-top: 5px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 4px rgba(47,128,102,.12); }
+    .status-dot.warning { background: var(--red); box-shadow: 0 0 0 4px rgba(210,105,86,.12); animation: pulse 1s infinite; }
+    .status-dot.success { background: #4a9b70; }
+    .status-text { color: #48635a; font-size: .82rem; line-height: 1.45; }
+    .actions { display: grid; gap: 9px; margin-top: 17px; }
+    .action-btn {
+      min-height: 46px;
+      padding: 11px 15px;
+      border: 0;
+      border-radius: 12px;
+      background: var(--green);
+      color: white;
+      cursor: pointer;
+      font-weight: 800;
+      transition: transform .16s ease, background .16s ease, box-shadow .16s ease;
+      box-shadow: 0 7px 15px rgba(47,128,102,.15);
+    }
+    .action-btn:hover { transform: translateY(-1px); background: var(--green-dark); }
+    .action-btn.secondary { border: 1px solid var(--line); background: #fffefa; color: var(--ink); box-shadow: none; }
+    .action-btn.secondary:hover { border-color: #b7c9bc; background: #f3f6ef; }
+    .action-btn:focus-visible, .track-tile:focus-visible { outline: 3px solid #e8aa4c; outline-offset: 3px; }
+    .help { margin: 15px 2px 0; color: var(--muted); font-size: .78rem; line-height: 1.55; }
+    .key-hint { display: inline-block; margin-top: 8px; padding: 4px 8px; border-radius: 7px; background: #eef1e8; color: #62736b; font-size: .7rem; font-weight: 750; }
+
+    .board-card { padding: 17px; }
+    .board-heading { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin: 0 2px 13px; }
+    .board-title { margin: 0; font-size: .86rem; font-weight: 850; letter-spacing: .08em; text-transform: uppercase; }
+    .board-size { color: var(--muted); font-size: .76rem; font-weight: 700; }
+    .board-frame { width: min(100%, 650px); margin: 0 auto; padding: 9px; border: 1px solid #496052; border-radius: 17px; background: #435c4b; box-shadow: inset 0 2px 7px rgba(18,34,24,.2), 0 10px 24px rgba(32,57,41,.12); }
+    .board {
+      display: grid;
+      grid-template-columns: repeat(var(--grid-size), minmax(0, 1fr));
+      gap: clamp(2px, .75vw, 6px);
+      width: 100%;
+      aspect-ratio: 1;
+      padding: clamp(3px, .7vw, 6px);
+      border-radius: 11px;
+      background-color: #78927a;
+      background-image:
+        radial-gradient(ellipse at 20% 30%, rgba(210,224,182,.18) 0 1px, transparent 2px),
+        radial-gradient(ellipse at 70% 70%, rgba(30,72,49,.16) 0 1px, transparent 2px);
+      background-size: 23px 27px, 31px 29px;
+    }
+    .empty-cell, .track-tile { position: relative; min-width: 0; min-height: 0; overflow: hidden; border-radius: clamp(4px, .7vw, 8px); }
+    .empty-cell { display: grid; place-items: center; border: 1px solid rgba(255,255,255,.055); background: rgba(79,116,82,.2); }
+    .empty-cell::after { width: 15%; height: 15%; border-radius: 50% 0 50% 0; background: rgba(199,216,168,.21); content: ""; transform: rotate(35deg); }
+    .track-tile {
+      display: grid;
+      place-items: center;
+      padding: 0;
+      border: 1px solid rgba(46,56,48,.22);
+      background: linear-gradient(145deg, #dce2cb, #c8d3b8);
+      cursor: pointer;
+      touch-action: manipulation;
+      transition: background .18s ease, box-shadow .18s ease, filter .18s ease;
+    }
+    .track-tile:hover { filter: brightness(1.06); }
+    .track-tile.aligned { background: linear-gradient(145deg, #e1efda, #cde2ce); }
+    .track-tile.target { z-index: 1; border-color: #f0ad4a; box-shadow: inset 0 0 0 2px rgba(255,190,92,.85), 0 0 0 2px rgba(255,209,127,.56); }
+    .track-tile.waiting { animation: tile-pulse .8s infinite alternate; }
+    .rail-svg { display: block; width: 100%; height: 100%; overflow: visible; }
+    .rail-path { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+    .rail-bed { stroke: #544738; stroke-width: 23; }
+    .rail-wood { stroke: #b4976d; stroke-width: 17; }
+    .rail-ties { stroke: #4d554c; stroke-width: 3; stroke-dasharray: 1 9; }
+    .terminal {
+      position: absolute;
+      z-index: 2;
+      top: 3px;
+      left: 3px;
+      padding: 2px 4px;
+      border-radius: 4px;
+      background: rgba(31,67,52,.88);
+      color: white;
+      font-size: clamp(5px, .78vw, 9px);
+      font-weight: 900;
+      letter-spacing: .04em;
+      line-height: 1.2;
+    }
+    .terminal.goal { right: 3px; left: auto; background: rgba(178,107,48,.94); }
+    .step-badge {
+      position: absolute;
+      z-index: 2;
+      right: 3px;
+      bottom: 3px;
+      min-width: 13px;
+      padding: 2px 3px;
+      border-radius: 5px;
+      background: rgba(37,54,43,.76);
+      color: white;
+      font-size: clamp(6px, .75vw, 9px);
+      font-weight: 850;
+      line-height: 1;
+      text-align: center;
+    }
+    .train-marker {
+      position: absolute;
+      z-index: 3;
+      top: 50%;
+      left: 50%;
+      display: grid;
+      width: 65%;
+      height: 65%;
+      place-items: center;
+      border-radius: 50%;
+      background: #fff9e8;
+      box-shadow: 0 2px 6px rgba(28,45,33,.3);
+      font-size: clamp(12px, 2.4vw, 24px);
+      line-height: 1;
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+      animation: train-pop .22s ease-out;
+    }
+    .legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; margin: 13px 0 0; color: var(--muted); font-size: .72rem; }
+    .legend span { display: inline-flex; align-items: center; gap: 6px; }
+    .legend-mark { width: 9px; height: 9px; border: 2px solid #ecae4c; border-radius: 3px; }
+    .legend-mark.fixed { border-color: #69a87c; background: #cde2ce; }
+    .footer-note { padding-top: 22px; color: #839087; font-size: .72rem; text-align: center; }
+    @keyframes pulse { 50% { opacity: .48; } }
+    @keyframes tile-pulse { to { box-shadow: inset 0 0 0 3px rgba(214,102,79,.78); } }
+    @keyframes train-pop { from { opacity: .35; transform: translate(-50%, -50%) scale(.75); } to { opacity: 1; transform: translate(-50%, -50%) scale(1); } }
+    @media (max-width: 800px) {
+      .game-layout { grid-template-columns: 1fr; }
+      .panel { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 16px; align-items: start; }
+      .level-line { grid-column: 1 / -1; }
+      .timer-box { margin-top: 0; }
+      .stats { margin-top: 0; }
+      .status-card { margin-top: 0; }
+      .actions { margin-top: 0; }
+      .help { grid-column: 1 / -1; margin-top: 0; }
+      .board-frame { width: min(100%, 620px); }
+    }
+    @media (max-width: 520px) {
+      .page { width: min(100% - 22px, 460px); padding-top: 13px; }
+      .hero { padding: 27px 0 20px; }
+      .hero-copy { font-size: .88rem; }
+      .panel { display: block; padding: 14px; border-radius: 16px; }
+      .level-line { margin-bottom: 12px; }
+      .timer-box { padding: 10px 12px; }
+      .stats { margin-top: 9px; }
+      .stat { padding: 9px 11px; }
+      .status-card { min-height: auto; margin-top: 10px; }
+      .actions { grid-template-columns: 1fr 1fr; margin-top: 10px; }
+      .action-btn { min-height: 42px; padding: 9px; font-size: .82rem; }
+      .help { margin-top: 10px; font-size: .74rem; }
+      .board-card { padding: 10px; border-radius: 16px; }
+      .board-frame { padding: 5px; border-radius: 12px; }
+      .board { gap: 2px; padding: 3px; }
+      .legend { gap: 10px; font-size: .67rem; }
+      .top-note { font-size: .69rem; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="topbar">
+      <div class="brand"><span class="brand-icon" aria-hidden="true">↗</span><span>SWITCHYARD<br>STUDIO</span></div>
+      <div class="top-note">A little timing. A lot of track sense.</div>
+    </header>
+
+    <section class="hero">
+      <p class="eyebrow">A quick-thinking rail puzzle</p>
+      <h1>Switchyard Sprint</h1>
+      <p class="hero-copy">The train is on its way. Rotate the track pieces to connect the station to the goal before the engine runs out of patience.</p>
+    </section>
+
+    <section class="game-layout" aria-label="Train track puzzle">
+      <aside class="panel">
+        <div class="level-line">
+          <span class="level-label">Current route</span>
+          <span class="level-number" id="levelValue">1</span>
+        </div>
+        <div class="timer-box">
+          <div class="timer-head">
+            <span class="timer-title">Time to deliver</span>
+            <span class="timer-value" id="timerValue">01:20</span>
+          </div>
+          <div class="timer-track" aria-hidden="true"><div class="timer-fill" id="timerFill"></div></div>
+        </div>
+        <div class="stats">
+          <div class="stat"><span class="stat-value" id="fixedValue">0/0</span><span class="stat-label">Tracks aligned</span></div>
+          <div class="stat"><span class="stat-value" id="movesValue">0</span><span class="stat-label">Rotations</span></div>
+        </div>
+        <div class="status-card" aria-live="polite">
+          <span class="status-dot" id="statusDot"></span>
+          <span class="status-text" id="statusText">Rotate the tracks, then dispatch the train. Watch the glowing tile for the next repair.</span>
+        </div>
+        <div class="actions">
+          <button class="action-btn" id="dispatchBtn" type="button">Dispatch train</button>
+          <button class="action-btn secondary" id="newRouteBtn" type="button">New route</button>
+        </div>
+        <p class="help">Follow the numbered route from START to GOAL. Click a rail tile to turn it 90° and join both ends. Fix the glowing tile before the train arrives; it pauses briefly if the way is blocked.<br><span class="key-hint">Click / tap a track piece</span></p>
+      </aside>
+
+      <section class="board-card" aria-label="Randomly generated track board">
+        <div class="board-heading">
+          <h2 class="board-title">The countryside line</h2>
+          <span class="board-size" id="boardSize">7 × 7</span>
+        </div>
+        <div class="board-frame">
+          <div class="board" id="board" role="group" aria-label="Track tiles"></div>
+        </div>
+        <div class="legend" aria-hidden="true">
+          <span><i class="legend-mark"></i> Next repair</span>
+          <span><i class="legend-mark fixed"></i> Correctly connected</span>
+          <span>🚂 Train position</span>
+        </div>
+      </section>
+    </section>
+    <footer class="footer-note">Every new route is generated at random. Keep the train on the rails!</footer>
+  </main>
+
+  <script>
+    (() => {
+      'use strict';
+
+      const DIRECTIONS = [
+        { row: -1, col: 0 },
+        { row: 0, col: 1 },
+        { row: 1, col: 0 },
+        { row: 0, col: -1 }
+      ];
+      const TOTAL_TIME = 80000;
+      const WAIT_LIMIT = 7000;
+      const boardElement = document.getElementById('board');
+      const dispatchButton = document.getElementById('dispatchBtn');
+      const statusText = document.getElementById('statusText');
+      const statusDot = document.getElementById('statusDot');
+      let level = 1;
+      let size = 7;
+      let route = [];
+      let routeCells = [];
+      let gameState = 'idle';
+      let trainIndex = -1;
+      let blockedIndex = null;
+      let blockedTime = 0;
+      let remainingTime = TOTAL_TIME;
+      let rotationCount = 0;
+      let nextMoveAt = 0;
+      let pauseDelay = 0;
+      let lastTick = 0;
+
+      function randomInt(max) {
+        return Math.floor(Math.random() * max);
+      }
+
+      function shuffled(values) {
+        const result = values.slice();
+        for (let index = result.length - 1; index > 0; index--) {
+          const other = randomInt(index + 1);
+          [result[index], result[other]] = [result[other], result[index]];
+        }
+        return result;
+      }
+
+      function neighborsOf(index, gridSize) {
+        const row = Math.floor(index / gridSize);
+        const col = index % gridSize;
+        return DIRECTIONS
+          .map((direction, side) => ({
+            side,
+            row: row + direction.row,
+            col: col + direction.col
+          }))
+          .filter((neighbor) => neighbor.row >= 0 && neighbor.row < gridSize && neighbor.col >= 0 && neighbor.col < gridSize)
+          .map((neighbor) => ({ index: neighbor.row * gridSize + neighbor.col, side: neighbor.side }));
+      }
+
+      function makeRandomTree(gridSize) {
+        const tree = Array.from({ length: gridSize * gridSize }, () => []);
+        const visited = new Uint8Array(gridSize * gridSize);
+        const stack = [randomInt(gridSize * gridSize)];
+        visited[stack[0]] = 1;
+
+        while (stack.length) {
+          const current = stack[stack.length - 1];
+          const options = shuffled(neighborsOf(current, gridSize).filter((neighbor) => !visited[neighbor.index]));
+          if (!options.length) {
+            stack.pop();
+            continue;
+          }
+          const next = options[0].index;
+          tree[current].push(next);
+          tree[next].push(current);
+          visited[next] = 1;
+          stack.push(next);
+        }
+        return tree;
+      }
+
+      function routeBetween(tree, start, goal) {
+        const previous = new Int32Array(tree.length);
+        previous.fill(-2);
+        previous[start] = -1;
+        const queue = [start];
+        for (let head = 0; head < queue.length; head++) {
+          const current = queue[head];
+          if (current === goal) break;
+          for (const neighbor of tree[current]) {
+            if (previous[neighbor] === -2) {
+              previous[neighbor] = current;
+              queue.push(neighbor);
+            }
+          }
+        }
+        if (previous[goal] === -2) return [];
+        const path = [];
+        for (let cell = goal; cell !== -1; cell = previous[cell]) path.push(cell);
+        return path.reverse();
+      }
+
+      function generateRoute(gridSize) {
+        let bestRoute = null;
+        const vertical = Math.random() < 0.5;
+        for (let attempt = 0; attempt < 60; attempt++) {
+          const tree = makeRandomTree(gridSize);
+          let start;
+          let goal;
+          let startSide;
+          let goalSide;
+          if (vertical) {
+            const startCol = randomInt(gridSize);
+            const goalCol = randomInt(gridSize);
+            start = startCol;
+            goal = (gridSize - 1) * gridSize + goalCol;
+            startSide = 0;
+            goalSide = 2;
+          } else {
+            const startRow = randomInt(gridSize);
+            const goalRow = randomInt(gridSize);
+            start = startRow * gridSize;
+            goal = startRow * gridSize + gridSize - 1;
+            startSide = 3;
+            goalSide = 1;
+            if (goalRow !== startRow) {
+              start = startRow * gridSize;
+              goal = goalRow * gridSize + gridSize - 1;
+            }
+          }
+          const path = routeBetween(tree, start, goal);
+          if (!bestRoute || path.length > bestRoute.path.length) {
+            bestRoute = { path, startSide, goalSide };
+          }
+          if (path.length >= gridSize + 4 && path.length <= gridSize * 3) {
+            return { path, startSide, goalSide };
+          }
+        }
+        if (!bestRoute || !bestRoute.path.length) {
+          return { path: Array.from({ length: gridSize }, (_, col) => col), startSide: 3, goalSide: 1 };
+        }
+        return bestRoute;
+      }
+
+      function sideBetween(from, to) {
+        const rowDiff = Math.floor(to / size) - Math.floor(from / size);
+        const colDiff = (to % size) - (from % size);
+        return DIRECTIONS.findIndex((direction) => direction.row === rowDiff && direction.col === colDiff);
+      }
+
+      function rotateSide(side, turns) {
+        return (side + turns) % 4;
+      }
+
+      function tileConnections(type, rotation) {
+        const base = type === 'straight' ? [0, 2] : [0, 1];
+        return base.map((side) => rotateSide(side, rotation)).sort((a, b) => a - b);
+      }
+
+      function matchingRotations(type, required) {
+        return [0, 1, 2, 3].filter((rotation) => {
+          const actual = tileConnections(type, rotation);
+          return actual[0] === required[0] && actual[1] === required[1];
+        });
+      }
+
+      function pieceFor(required) {
+        const opposite = (required[0] + 2) % 4 === required[1];
+        const type = opposite ? 'straight' : 'curve';
+        const rotations = matchingRotations(type, required.slice().sort((a, b) => a - b));
+        return { type, solution: rotations[0] };
+      }
+
+      function connectionsMatch(tile) {
+        const actual = tileConnections(tile.type, tile.rotation);
+        const required = tile.required.slice().sort((a, b) => a - b);
+        return actual[0] === required[0] && actual[1] === required[1];
+      }
+
+      function directionPairFor(path, index, startSide, goalSide) {
+        const cell = path[index];
+        const entry = index === 0 ? startSide : sideBetween(cell, path[index - 1]);
+        const exit = index === path.length - 1 ? goalSide : sideBetween(cell, path[index + 1]);
+        return [entry, exit];
+      }
+
+      function makeTrackSvg(tile) {
+        const path = tile.type === 'straight' ? 'M50 0 L50 100' : 'M50 0 C50 27 73 50 100 50';
+        const rotation = tile.rotation * 90;
+        const transform = `rotate(${rotation} 50 50)`;
+        return `<svg class="rail-svg" viewBox="0 0 100 100" aria-hidden="true">
+          <path class="rail-path rail-bed" d="${path}" transform="${transform}"></path>
+          <path class="rail-path rail-wood" d="${path}" transform="${transform}"></path>
+          <path class="rail-path rail-ties" d="${path}" transform="${transform}"></path>
+        </svg>`;
+      }
+
+      function renderTile(tile) {
+        const aligned = connectionsMatch(tile);
+        tile.aligned = aligned;
+        tile.button.classList.toggle('aligned', aligned);
+        tile.button.classList.toggle('waiting', gameState === 'running' && blockedIndex === tile.index);
+        tile.button.dataset.aligned = String(aligned);
+        tile.button.setAttribute(
+          'aria-label',
+          `Track ${tile.order} of ${route.length}, ${tile.type}, ${aligned ? 'connected correctly' : 'needs rotation'}. Activate to rotate clockwise.`
+        );
+        const labels = `${tile.isStart ? '<span class="terminal">START</span>' : ''}${tile.isGoal ? '<span class="terminal goal">GOAL</span>' : ''}<span class="step-badge">${tile.order}</span>`;
+        const train = tile.index === (trainIndex < 0 ? 0 : trainIndex) ? '<span class="train-marker" aria-hidden="true">🚂</span>' : '';
+        tile.button.innerHTML = `${makeTrackSvg(tile)}${labels}${train}`;
+      }
+
+      function updateBoardClasses() {
+        const targetIndex = gameState === 'won' || gameState === 'lost' ? -1 : (blockedIndex ?? trainIndex + 1);
+        for (const tile of route) {
+          tile.button.classList.toggle('target', tile.index === targetIndex && targetIndex < route.length);
+          tile.button.classList.toggle('waiting', gameState === 'running' && blockedIndex === tile.index);
+          renderTile(tile);
+        }
+      }
+
+      function formatTime(milliseconds) {
+        const seconds = Math.max(0, Math.ceil(milliseconds / 1000));
+        return `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`;
+      }
+
+      function updateHud() {
+        const fixed = route.filter(connectionsMatch).length;
+        document.getElementById('levelValue').textContent = String(level);
+        document.getElementById('fixedValue').textContent = `${fixed}/${route.length}`;
+        document.getElementById('movesValue').textContent = String(rotationCount);
+        document.getElementById('timerValue').textContent = formatTime(remainingTime);
+        document.getElementById('timerValue').classList.toggle('urgent', remainingTime < 15000);
+        document.getElementById('timerFill').style.width = `${Math.max(0, remainingTime / TOTAL_TIME * 100)}%`;
+      }
+
+      function setStatus(message, kind) {
+        statusText.textContent = message;
+        statusDot.className = `status-dot${kind ? ` ${kind}` : ''}`;
+      }
+
+      function rotateTile(tile) {
+        if (gameState === 'won' || gameState === 'lost') return;
+        tile.rotation = (tile.rotation + 1) % 4;
+        rotationCount++;
+        if (gameState === 'running' && blockedIndex === tile.index && connectionsMatch(tile)) {
+          blockedIndex = null;
+          blockedTime = 0;
+          nextMoveAt = performance.now() + 180;
+          setStatus('Track fixed! The train is moving again.', 'success');
+        }
+        updateBoardClasses();
+        updateHud();
+      }
+
+      function buildBoard() {
+        boardElement.innerHTML = '';
+        boardElement.style.setProperty('--grid-size', size);
+        boardElement.setAttribute('aria-label', `${size} by ${size} train track grid`);
+        routeCells = Array(size * size).fill(null);
+        route.forEach((tile, index) => {
+          tile.order = index + 1;
+          tile.isStart = index === 0;
+          tile.isGoal = index === route.length - 1;
+          routeCells[tile.cell] = tile;
+        });
+
+        for (let cell = 0; cell < size * size; cell++) {
+          const tile = routeCells[cell];
+          if (!tile) {
+            const empty = document.createElement('div');
+            empty.className = 'empty-cell';
+            empty.setAttribute('aria-hidden', 'true');
+            boardElement.appendChild(empty);
+            continue;
+          }
+          const button = document.createElement('button');
+          button.className = 'track-tile';
+          button.type = 'button';
+          tile.button = button;
+          button.addEventListener('click', () => rotateTile(tile));
+          boardElement.appendChild(button);
+          renderTile(tile);
+        }
+        updateBoardClasses();
+      }
+
+      function newPuzzle() {
+        size = Math.min(7 + Math.floor((level - 1) / 2), 9);
+        const generated = generateRoute(size);
+        const path = generated.path;
+        route = path.map((cell, index) => {
+          const required = directionPairFor(path, index, generated.startSide, generated.goalSide);
+          const piece = pieceFor(required);
+          const correctTurns = matchingRotations(piece.type, required.slice().sort((a, b) => a - b));
+          const incorrectTurns = [0, 1, 2, 3].filter((turn) => !correctTurns.includes(turn));
+          const rotation = Math.random() < 0.2
+            ? correctTurns[randomInt(correctTurns.length)]
+            : incorrectTurns[randomInt(incorrectTurns.length)];
+          return { index, cell, type: piece.type, required, rotation, solution: piece.solution };
+        });
+
+        gameState = 'idle';
+        trainIndex = -1;
+        blockedIndex = null;
+        blockedTime = 0;
+        remainingTime = TOTAL_TIME;
+        rotationCount = 0;
+        nextMoveAt = 0;
+        pauseDelay = 0;
+        document.getElementById('boardSize').textContent = `${size} × ${size}`;
+        dispatchButton.textContent = 'Dispatch train';
+        buildBoard();
+        updateHud();
+        setStatus('Rotate the tracks, then dispatch the train. Watch the glowing tile for the next repair.');
+      }
+
+      function finishGame(won, message) {
+        gameState = won ? 'won' : 'lost';
+        blockedIndex = null;
+        dispatchButton.textContent = won ? 'Next level' : 'Try again';
+        setStatus(message, won ? 'success' : 'warning');
+        updateBoardClasses();
+      }
+
+      function advanceTrain() {
+        const now = performance.now();
+        if (gameState !== 'running') {
+          lastTick = now;
+          return;
+        }
+        const delta = Math.min(now - lastTick, 250);
+        lastTick = now;
+        remainingTime -= delta;
+        if (remainingTime <= 0) {
+          remainingTime = 0;
+          updateHud();
+          finishGame(false, 'Time is up! Build a quicker route and try again.');
+          return;
+        }
+
+        const nextIndex = trainIndex + 1;
+        if (nextIndex >= route.length) return;
+        if (blockedIndex === null && now < nextMoveAt) {
+          updateHud();
+          return;
+        }
+
+        const nextTile = route[nextIndex];
+        if (!connectionsMatch(nextTile)) {
+          if (blockedIndex !== nextIndex) {
+            blockedIndex = nextIndex;
+            blockedTime = 0;
+            setStatus('The train is braking! Rotate the glowing tile before it gives up.');
+            updateBoardClasses();
+          }
+          blockedTime += delta;
+          if (blockedTime >= WAIT_LIMIT) {
+            finishGame(false, 'The track stayed blocked too long. Build a new route and try again.');
+          }
+          updateHud();
+          return;
+        }
+
+        blockedIndex = null;
+        blockedTime = 0;
+        trainIndex = nextIndex;
+        updateBoardClasses();
+        updateHud();
+        if (trainIndex === route.length - 1) {
+          finishGame(true, `Delivered! You cleared the route with ${formatTime(remainingTime)} to spare.`);
+          return;
+        }
+        nextMoveAt = now + Math.max(420, 760 - (level - 1) * 32);
+        setStatus('All aboard! Fix the next glowing piece while the train rolls.', 'success');
+      }
+
+      dispatchButton.addEventListener('click', () => {
+        if (gameState === 'won') {
+          level++;
+          newPuzzle();
+          return;
+        }
+        if (gameState === 'lost') {
+          newPuzzle();
+          return;
+        }
+        if (gameState === 'running') {
+          const now = performance.now();
+          pauseDelay = Math.max(0, nextMoveAt - now);
+          gameState = 'paused';
+          dispatchButton.textContent = 'Resume train';
+          setStatus('Train paused. Take a moment to line up the rails.');
+          updateBoardClasses();
+          return;
+        }
+
+        gameState = 'running';
+        lastTick = performance.now();
+        if (trainIndex === -1) nextMoveAt = lastTick + 500;
+        else nextMoveAt = lastTick + (blockedIndex === null ? pauseDelay : 0);
+        dispatchButton.textContent = 'Pause train';
+        setStatus('Train dispatched! Watch the glowing tile and keep the route clear.', 'success');
+        updateBoardClasses();
+      });
+
+      document.getElementById('newRouteBtn').addEventListener('click', () => newPuzzle());
+      window.setInterval(advanceTrain, 80);
+      newPuzzle();
+    })();
+  </script>
+</body>
+</html>

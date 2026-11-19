@@ -1,0 +1,7 @@
+Created the Capacitor project in RailRushAndroid, with the game, Android configuration, and build guide. The APK can use local leaderboard storage by default; the guide explains how to configure the hosted MySQL API.
+
+The project files and packaged game passed checks. I couldn’t generate the APK here because Node.js isn’t installed. Install Node.js 20+, then follow the guide’s commands to generate the Android project and build the APK in Android Studio.
+
+Node.js LTS is installed: Node v26.13.1 and npm 11.20.0. Open a new VS Code terminal so it picks up the updated PATH, then verify with node -v and npm.cmd -v.
+
+PowerShell’s current execution policy blocks npm.ps1, so use npm.cmd in that terminal. I did not change your execution policy.

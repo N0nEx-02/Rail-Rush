@@ -100,22 +100,8 @@ function fetchTopScores(PDO $pdo): array
 }
 
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
-$origin = $_SERVER['HTTP_ORIGIN'] ?? '';
-if ($origin === 'https://localhost') {
-    header('Access-Control-Allow-Origin: https://localhost');
-    header('Vary: Origin');
-    header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
-    header('Access-Control-Allow-Headers: Accept, Content-Type');
-}
-
-if ($method === 'OPTIONS') {
-    header('Allow: GET, POST, OPTIONS');
-    http_response_code(204);
-    exit;
-}
-
 if (!in_array($method, ['GET', 'POST'], true)) {
-    header('Allow: GET, POST, OPTIONS');
+    header('Allow: GET, POST');
     respond(['ok' => false, 'error' => 'Method not allowed.'], 405);
 }
 
